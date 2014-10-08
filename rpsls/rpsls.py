@@ -1,0 +1,107 @@
+# Rock-paper-scissors-lizard-Spock template
+# http://www.codeskulptor.org/#user37_KcttlyXaWji9Gyw.py
+
+import random
+
+# The key idea of this program is to equate the strings
+# "rock", "paper", "scissors", "lizard", "Spock" to numbers
+# as follows:
+#
+# 0 - rock
+# 1 - Spock
+# 2 - paper
+# 3 - lizard
+# 4 - scissors
+
+# helper functions
+
+def name_to_number(name):
+    # convert name to number using if/elif/else
+    # don't forget to return the result!
+    if name == "rock":
+        return 0
+    elif name == "Spock":
+        return 1
+    elif name == "paper":
+        return 2
+    elif name == "lizard":
+        return 3
+    elif name == "scissors":
+        return 4
+    else:
+        print "name_to_number: name '",name,"' not recognised"
+        return -99
+
+
+
+def number_to_name(number):
+    # convert number to a name using if/elif/else
+    # don't forget to return the result!
+    if number == 0:
+        return "rock"
+    elif number == 1:
+        return "Spock"
+    elif number == 2:
+        return "paper"
+    elif number == 3:
+        return "lizard"
+    elif number == 4:
+        return "scissors"
+    else:
+        print "number_to_name: number ",number," given, should be in range 0-4"
+        return "<unknown>"
+
+def rpsls(player_choice):
+    # Rock-Paper-Scissors-Lizard-Spock function
+    #
+    # NOTE: whilst not required or used by the main program
+    # this returns False if an invalid choice was given and true
+    # otherwise
+
+    # print a blank line to separate consecutive games
+    print
+    # print out the message for the player's choice
+    print "Player chooses",player_choice
+
+    # convert the player's choice to player_number using the function name_to_number()
+    player_number = name_to_number(player_choice)
+    if player_number == -99:
+        print "rpsls: name_to_number(",player_choice,") failed"
+        return False
+
+    # compute random guess for comp_number using random.randrange()
+    comp_number = random.randrange(0,5)
+
+    # convert comp_number to comp_choice using the function number_to_name()
+    comp_choice = number_to_name(comp_number)
+    if comp_choice == "<unknown>":
+        print "rpsls: number_to_name(",comp_number,") failed"
+        return False
+
+    # print out the message for computer's choice
+    print "Computer chooses",comp_choice
+
+    # compute difference of comp_number and player_number modulo five
+    diff_mod_five = (comp_number - player_number) % 5
+
+    # use if/elif/else to determine winner, print winner message
+    if diff_mod_five == 0:
+        print "Player and computer tie!"
+    elif diff_mod_five >= 3:
+        print "Player wins!"
+    else:
+        print "Computer wins!"
+
+    return True
+
+
+# test your code - THESE CALLS MUST BE PRESENT IN YOUR SUBMITTED CODE
+rpsls("rock")
+rpsls("Spock")
+rpsls("paper")
+rpsls("lizard")
+rpsls("scissors")
+
+# always remember to check your completed program against the grading rubric
+
+
