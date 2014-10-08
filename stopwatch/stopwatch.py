@@ -1,5 +1,7 @@
 # template for "Stopwatch: The Game"
 # http://www.codeskulptor.org/#user38_jydbTAZo6f7K2S6.py
+
+# new comment
 import simpleguitk as simplegui
 
 # define global variables
