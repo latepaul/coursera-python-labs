@@ -19,7 +19,7 @@ successes = 0
 #score is a string displaying game score
 #score_x is x position to display it at
 score = "0/0"
-score_x = 270
+score_x = 260
 
 # define helper function format that converts time
 # in tenths of seconds into formatted string A:BC.D
@@ -51,7 +51,7 @@ def update_score():
 
     #update score_x so that the score always aligns to the same right position
     #meaning it doesn't go off the screen
-    score_x=300 - (10*len(score))
+    score_x=290 - (10*len(score))
 
 # define event handlers for buttons; "Start", "Stop", "Reset"
 def start_handler():
