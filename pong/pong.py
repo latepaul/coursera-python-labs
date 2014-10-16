@@ -1,5 +1,7 @@
 # Implementation of classic arcade game Pong
 
+#
+
 import simpleguitk as simplegui
 import random
 
