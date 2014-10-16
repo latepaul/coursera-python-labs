@@ -2,7 +2,7 @@
 
 # Codeskulptor URL: http://www.codeskulptor.org/#user38_b7FXxGRalqHjlN9.py
 
-# colours, font sizes etc are tuned to Codeskulptor's output!
+# colours, font sizes etc are tuned to Codeskulptor's output!!
 
 import simpleguitk as simplegui
 import random
