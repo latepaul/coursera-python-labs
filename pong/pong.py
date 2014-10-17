@@ -1,10 +1,15 @@
 # Implementation of classic arcade game Pong
 
-# Codeskulptor URL: http://www.codeskulptor.org/#user38_b7FXxGRalqHjlN9.py
+# Codeskulptor URL: http://www.codeskulptor.org/#user38_jDOGcVidD3D8bvl_0.py
 
-# colours, font sizes etc are tuned to Codeskulptor's output!!
+# allow use in CodeSkulptor or regular python with simpleguitk
+try:
+    import simplegui
+    codeskulptor=True
+except:
+    import simpleguitk as simplegui
+    codeskulptor=False
 
-import simpleguitk as simplegui
 import random
 
 # initialize globals - pos and vel encode vertical info for paddles
@@ -16,18 +21,41 @@ PAD_HEIGHT = 80
 HALF_PAD_WIDTH = PAD_WIDTH / 2
 HALF_PAD_HEIGHT = PAD_HEIGHT / 2
 
+# codeskulptor and simpleguitk size things differently so
+# allow for that with some values for things like font size
+if codeskulptor:
+    BIG_FONT = 40
+    SMALL_FONT = 26
+    RALLY_X = WIDTH - 100
+    RALLY_Y1 = HEIGHT - 35
+    RALLY_Y2 = HEIGHT - 10
+else:
+    BIG_FONT = 26
+    SMALL_FONT = 14
+    RALLY_X = WIDTH - 90
+    RALLY_Y1 = HEIGHT - 25
+    RALLY_Y2 = HEIGHT - 5
+
 #Position of right hand gutter
-RGUTTER=WIDTH - 1 - PAD_WIDTH
+RGUTTER = WIDTH - 1 - PAD_WIDTH
 
 LEFT = False
 RIGHT = True
 
 #position for scores
-LSCORE_POS = WIDTH/4 - 24
+LSCORE_POS = WIDTH/4 
 RSCORE_POS = (WIDTH/4)*3
 
+#paddle speed when moving is constant
+#I made this a variable so I could try different
+#speeds - 3 seems to work well relative to ball speed
+#given my reactions. Others might want to try faster
+#or slower!
 PADDLE_SPEED = 3
 
+#initial paddle positions and velocity
+paddle1_pos = paddle2_pos = HEIGHT/2
+paddle1_vel = paddle2_vel = 0
 
 # initialize ball_pos and ball_vel for new bal in middle of table
 # if direction is RIGHT, the ball's velocity is upper right, else upper left
@@ -50,7 +78,6 @@ def spawn_ball(direction):
 
 # define event handlers
 def new_game():
-    global paddle1_pos, paddle2_pos, paddle1_vel, paddle2_vel  # these are numbers
     global score1, score2  # these are ints
     global rally,rally_hi
 
@@ -60,9 +87,7 @@ def new_game():
     else:
         spawn_ball(LEFT)
 
-    # set initial paddle positions, velocities and scores
-    paddle1_pos = paddle2_pos = HEIGHT/2
-    paddle1_vel = paddle2_vel = 0
+    # (re-)set scores to 0-0
     score1 = score2 = 0
     
     #used to track rallys
@@ -83,12 +108,12 @@ def draw(canvas):
 
     #bounce off top and bottom
     if ball_pos[1] > HEIGHT-1-BALL_RADIUS:
-        ball_vel[1]=-ball_vel[1]
-        ball_pos[1] = HEIGHT-1-BALL_RADIUS
+        ball_vel[1] = -ball_vel[1]
+        ball_pos[1] =  HEIGHT-1-BALL_RADIUS
 
     if ball_pos[1] < BALL_RADIUS:
+        ball_vel[1] = -ball_vel[1]
         ball_pos[1] = BALL_RADIUS
-        ball_vel[1]=-ball_vel[1]
 
     #test for collision with gutter/paddle
     #left gutter/player1
@@ -104,10 +129,14 @@ def draw(canvas):
             if rally > rally_hi:
                 rally_hi=rally
         else:
+            #ball hit left hand gutter so, end rally, give player 2 a point
+            #and re-spawn a ball (toward player2)
             score2 += 1
             rally = 0
             spawn_ball(RIGHT)
+            
     #right gutter/player2    
+    #this is the mirror of the above
     if ball_pos[0] > WIDTH - 1 - BALL_RADIUS-PAD_WIDTH:
         if ball_pos[1] > paddle2_pos -HALF_PAD_HEIGHT-BALL_RADIUS and ball_pos[1] < paddle2_pos + HALF_PAD_HEIGHT+BALL_RADIUS:
             ball_vel[0]=-ball_vel[0]
@@ -143,10 +172,10 @@ def draw(canvas):
     canvas.draw_polygon([[RGUTTER,pad_top],[WIDTH-1,pad_top], [WIDTH-1,pad_bot],[RGUTTER,pad_bot]],2,"white","green")
     
     # draw scores
-    canvas.draw_text(str(score1),[LSCORE_POS,BALL_RADIUS*2],40,"Red")
-    canvas.draw_text(str(score2),[RSCORE_POS,BALL_RADIUS*2],40,"Green")
-    canvas.draw_text('Rally:'+str(rally),[WIDTH-100,HEIGHT - 25],26,"Orange")
-    canvas.draw_text('High:'+str(rally_hi),[WIDTH-100,HEIGHT - 5],26,"Orange")
+    canvas.draw_text(str(score1),[LSCORE_POS,BALL_RADIUS*2],BIG_FONT,"Red")
+    canvas.draw_text(str(score2),[RSCORE_POS,BALL_RADIUS*2],BIG_FONT,"Green")
+    canvas.draw_text('Rally:'+str(rally),[RALLY_X,RALLY_Y1],SMALL_FONT,"Orange")
+    canvas.draw_text('High:'+str(rally_hi),[RALLY_X,RALLY_Y2],SMALL_FONT,"Orange")
 
 
 def keydown(key):
