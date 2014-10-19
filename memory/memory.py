@@ -1,5 +1,5 @@
 # implementation of card game - Memory
-# Codeskulptor URL: http://www.codeskulptor.org/#user38_KbdNPJK9n69jrwe.py
+# Codeskulptor URL:
 
 # allow use in CodeSkulptor or regular python with simpleguitk
 try:
@@ -65,10 +65,11 @@ def mouseclick(pos):
     global state, card1, card2, turns
 
     idx = pos[0] // 50
+    if exposed[idx]:
+        return    
 
-    if not exposed[idx]:
-            exposed[idx]= True
-
+    exposed[idx]= True
+        
     if state == 0:
         card1 = idx
         state = 1
@@ -78,9 +79,8 @@ def mouseclick(pos):
         turns += 1
     else:
         if cards[card1] != cards[card2]:
-            exposed[card1]=False
-            exposed[card2]=False
-
+                exposed[card1]=False
+                exposed[card2]=False
         card1=idx
         state = 1
 
