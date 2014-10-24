@@ -1,44 +1,52 @@
 # implementation of card game - Memory
 # Codeskulptor URL:
 
-import simpleguitk as simplegui
+try:
+    import simplegui
+except:
+    import simpleguitk as simplegui
+
 import random
 
-# constants
 # card size
 CARD_WIDTH = 88
 CARD_HEIGHT = 120
 
-# global variables
 # game play variables
 state = 0
 card1 = card2 = -1
 turns = 0
+pairs = 0
+WINNING_PAIRS = 8
 
-# loaded and wait_msg are for when images are loading
+# loaded and picture_version are for when images are loading
 loaded = 0
-show_pictures = False
+picture_version = False
+game_started = False
 NUM_IMAGES = 1
+# initial "Please wait..." period (ms)
+PRELOAD_DELAY = 500
+wait_message = "Game loading, please wait..."
+WIN_PAUSE = 5000
 
-# lists
 # cards list of numbers 0-7 twice
 cards = list(range(8))
 cards.extend(list(range(8)))
 # empty list for card images
 im = []
 
-
 # list for cards which are exposed
 exposed = [False]*16
 
 # helper function to initialize globals
 def new_game():
-    global cards,state, turns, loaded, show_pictures
+    global cards,state, turns, loaded, picture_version, game_started
 
     # beginning state with 0 turns
     state = 0
     turns = 0
-    label.set_text("Turns = "+str(turns))
+    turns_lbl.set_text("Turns = "+str(turns))
+    pairs_lbl.set_text("Pairs = "+str(pairs))
 
     # shuffle twice? not really
     # cards is the list of values,0-7, which we shuffle to get a random board
@@ -58,13 +66,26 @@ def new_game():
           exposed[c]=False
 
     if loaded == NUM_IMAGES:
-        show_pictures = True
+        picture_version = True
     else:
-        show_pictures = False
+        picture_version = False
+        
+    game_started = True
+    win_timer.stop()
+
+def win():
+    global wait_message, game_started
+
+    wait_message = "Congratulations you won!"
+    game_started = False
+    win_timer.start()
+
+def win_timer():
+    new_game()
 
 # define event handlers
 def mouseclick(pos):
-    global state, card1, card2, turns
+    global state, card1, card2, turns,pairs
 
     #idx is the index of the card we clicked on
     idx = pos[0] // CARD_WIDTH + (pos[1] //CARD_HEIGHT)*4
@@ -87,7 +108,12 @@ def mouseclick(pos):
         card2 = idx
         state = 2
         turns += 1
-        label.set_text("Turns = "+str(turns))
+        turns_lbl.set_text("Turns = "+str(turns))
+        if cards[card1] == cards[card2]:
+            pairs += 1
+            pairs_lbl.set_text("Pairs = "+str(pairs))
+            if pairs == WINNING_PAIRS:
+                win()
     else:
         #state 2, two (unpaired) cards showing
         # - check whether last two cards match, if not then flip them back (exposed = False)
@@ -96,13 +122,18 @@ def mouseclick(pos):
         if cards[card1] != cards[card2]:
             exposed[card1]=False
             exposed[card2]=False
+        
         card1=idx
         state = 1
 
 def draw(canvas):
-    global cards,im,show_pictures
-    global offset
+    global cards,im,picture_version
+    global game_started
 
+    if not game_started:
+        canvas.draw_text(wait_message,[30,70],20,"White")
+        return
+    
     #draw the cards
     for card in range(len(cards)):
         #co-ordinates of top left of card position, numbering:
@@ -115,21 +146,21 @@ def draw(canvas):
 
         if exposed[card]:
             #card is showing
-            if not show_pictures:
+            if picture_version:
+                 # PICTURE mode - the image appropriate to the card
+                canvas.draw_image(im[cards[card]],[CARD_WIDTH/2,CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT],[card_x+CARD_WIDTH/2,card_y+CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT])
+            else:
                 # NUMBERS mode - white-bordered black rectangle with a white card number in the centre
                 canvas.draw_polygon([[card_x,card_y],[card_x+CARD_WIDTH,card_y],[card_x+CARD_WIDTH,card_y+CARD_HEIGHT],[card_x,card_y+CARD_HEIGHT]],2,"White","Black")
                 canvas.draw_text(str(cards[card]),[card_x+30,card_y+70],40,"White")
-            else:
-                # PICTURE mode - the image appropriate to the card
-                canvas.draw_image(im[cards[card]],[CARD_WIDTH/2,CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT],[card_x+CARD_WIDTH/2,card_y+CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT])
         else:
             #card no showing
-            if not show_pictures:
+            if picture_version:
+                 # PICTURES mode - the image for the back of a card
+                canvas.draw_image(back_im,[CARD_WIDTH/2,CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT],[card_x+CARD_WIDTH/2,card_y+CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT])
+            else:
                 # NUMBERS mode - dark blue rectangle bordered in white
                 canvas.draw_polygon([[card_x,card_y],[card_x+CARD_WIDTH,card_y],[card_x+CARD_WIDTH,card_y+CARD_HEIGHT],[card_x,card_y+CARD_HEIGHT]],2,"White","darkblue")
-            else:
-                # PICTURES mode - the image for the back of a card
-                canvas.draw_image(back_im,[CARD_WIDTH/2,CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT],[card_x+CARD_WIDTH/2,card_y+CARD_HEIGHT/2],[CARD_WIDTH,CARD_HEIGHT])
 
 # this timer is used to check whether the images have loaded
 def load_status_timer():
@@ -145,11 +176,14 @@ def load_status_timer():
         if im[i].get_width() > 0:
             loaded += 1
 
-    # if all messages are loaded, stop timer
-    print NUM_IMAGES
     if loaded == NUM_IMAGES:
         check_loading_timer.stop()
 
+def preload_timer():
+
+    initial_timer.stop()
+    new_game()
+    
 def load_images():
     global im, back_im
 
@@ -243,9 +277,10 @@ frame.add_button("Reset", new_game)
 frame.add_label("   ")
 
 # turns label, switch game type button
-label = frame.add_label("Turns = 0")
+turns_lbl = frame.add_label("Turns = 0")
 frame.add_label("   ")
 frame.add_label("   ")
+pairs_lbl = frame.add_label("Pairs = 0")
 frame.add_label("   ")
 frame.add_label("   ")
 
@@ -264,8 +299,12 @@ NUM_IMAGES += len(im)
 check_loading_timer = simplegui.create_timer(100,load_status_timer)
 check_loading_timer.start()
 
+initial_timer = simplegui.create_timer(500,preload_timer)
+initial_timer.start()
+
+win_timer = simplegui.create_timer(WIN_PAUSE,win_timer)
+
 #kick things off
-new_game()
 frame.start()
 
 # Always remember to review the grading rubric
