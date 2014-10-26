@@ -1,6 +1,10 @@
 # Mini-project #6 - Blackjack
 
-import simplegui
+try:
+    import simplegui
+except:
+    import simpleguitk as simplegui
+
 import random
 
 # load card sprite - 936x384 - source: jfitz.com
@@ -58,17 +62,32 @@ class Card:
 # define hand class
 class Hand:
     def __init__(self):
-        pass	# create Hand object
+        self.cards = []
+
 
     def __str__(self):
-        pass	# return a string representation of a hand
+        ret_str='Hand:'
+        for c in self.cards:
+            ret_str += ' '+str(c)
+        return ret_str
 
     def add_card(self, card):
-        pass	# add a card object to a hand
+        self.cards.append(card)
 
     def get_value(self):
         # count aces as 1, if the hand has an ace, then add 10 to hand value if it doesn't bust
-        pass	# compute the value of the hand, see Blackjack video
+        ret_val = 0
+        aces = False
+        for card in self.cards:
+            ret_val += VALUES[card.get_rank()]
+            if card.get_rank() == 'A':
+                aces = True
+
+        if aces:
+            if ret_val + 10 <= 21:
+                ret_val += 10
+
+        return ret_val
 
     def draw(self, canvas, pos):
         pass	# draw a hand on the canvas, use the draw method for cards
@@ -77,41 +96,89 @@ class Hand:
 # define deck class
 class Deck:
     def __init__(self):
-        pass	# create a Deck object
+        self.cards = []
+        for suit in SUITS:
+            for rank in RANKS:
+                self.cards.append(Card(suit,rank))
 
     def shuffle(self):
         # shuffle the deck
-        pass    # use random.shuffle()
+        random.shuffle(self.cards)
 
     def deal_card(self):
-        pass	# deal a card object from the deck
+        return self.cards.pop()
 
     def __str__(self):
-        pass	# return a string representing the deck
-
+        ret_str = 'Deck contains'
+        for card in self.cards:
+            ret_str += ' '+str(card)
+        return ret_str
 
 
 #define event handlers for buttons
 def deal():
-    global outcome, in_play
+    global outcome, in_play, dealer_hand, player_hand, deck
 
     # your code goes here
-
+    deck.shuffle()
+    player_hand = Hand()
+    dealer_hand = Hand()
+    player_hand.add_card(deck.deal_card())
+    dealer_hand.add_card(deck.deal_card())
+    player_hand.add_card(deck.deal_card())
+    dealer_hand.add_card(deck.deal_card())
+    print "Dealer has:",str(dealer_hand),"(",dealer_hand.get_value(),")"
+    print "Player has:",str(player_hand),"(",player_hand.get_value(),")"
     in_play = True
 
 def hit():
-    pass	# replace with your code below
+    global in_play, player_hand, outcome
 
     # if the hand is in play, hit the player
+    if not in_play:
+        return
+
+    player_hand.add_card(deck.deal_card())
 
     # if busted, assign a message to outcome, update in_play and score
+    print "Hitting..."
+    print str(player_hand)," --> ",player_hand.get_value()
+
+    if player_hand.get_value() > 21:
+        outcome="You have busted!"
+        print outcome
+        in_play = False
 
 def stand():
-    pass	# replace with your code below
+    global outcome, score, player_hand, dealer_hand, in_play
 
     # if hand is in play, repeatedly hit dealer until his hand has value 17 or more
+    if not in_play:
+        return
+
+    if player_hand.get_value() > 21:
+        print "You busted, Buster!"
+        return
+    else:
+        while dealer_hand.get_value() < 17:
+            dealer_hand.add_card(deck.deal_card())
+            print "Dealer:",str(dealer_hand)
 
     # assign a message to outcome, update in_play and score
+    if dealer_hand.get_value() > 21:
+        print "Dealer busted"
+        outcome = "Player Wins!"
+        score += 1
+        return
+
+    if dealer_hand.get_value() < player_hand.get_value():
+        outcome = "Player Wins!"
+        score += 1
+    else:
+        outcome = "Dealer Wins!"
+        score -= 1
+    print outcome
+    in_play = False
 
 # draw handler
 def draw(canvas):
@@ -131,7 +198,7 @@ frame.add_button("Hit",  hit, 200)
 frame.add_button("Stand", stand, 200)
 frame.set_draw_handler(draw)
 
-
+deck = Deck()
 # get things rolling
 deal()
 frame.start()
