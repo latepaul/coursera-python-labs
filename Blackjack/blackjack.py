@@ -10,18 +10,19 @@ import random
 # load card sprite - 936x384 - source: jfitz.com
 CARD_SIZE = (72, 96)
 CARD_CENTER = (36, 48)
-card_images = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/cards_jfitz.png")
-
-CARD_BACK_SIZE = (72, 96)
-CARD_BACK_CENTER = (36, 48)
-card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")
+# card_images = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/cards_jfitz.png")
+#
+# CARD_BACK_SIZE = (72, 96)
+# CARD_BACK_CENTER = (36, 48)
+# card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")
 
 #Nicu images version
-# card_images = simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmS0tzZTRBZkNwcXc")
-# card_back=simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmWFV1UFFYRWswdDg")
-# CARD_BACK_SIZE = (88, 120)
-# CARD_BACK_CENTER = (44, 60)
-
+card_images = simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmSU5kZUI4c2dqc0k")
+card_back=simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmWFV1UFFYRWswdDg")
+CARD_BACK_SIZE = (88, 120)
+CARD_BACK_CENTER = (44, 60)
+TABLE_WIDTH = 600
+TABLE_HEIGHT = 600
 
 # initialize some useful global variables
 in_play = False
@@ -56,7 +57,7 @@ class Card:
 
     def draw(self, canvas, pos):
         card_loc = (CARD_CENTER[0] + CARD_SIZE[0] * RANKS.index(self.rank),
-                    CARD_CENTER[1] + CARD_SIZE[1] * SUITS.index(self.suit))
+                    CARD_CENTER[1] + CARD_SIZE[1] * SUITS.index(self.suit)-1)
         canvas.draw_image(card_images, card_loc, CARD_SIZE, [pos[0] + CARD_CENTER[0], pos[1] + CARD_CENTER[1]], CARD_SIZE)
 
 # define hand class
@@ -90,8 +91,19 @@ class Hand:
         return ret_val
 
     def draw(self, canvas, pos):
-        pass	# draw a hand on the canvas, use the draw method for cards
 
+        i=0
+        space = TABLE_WIDTH - pos[0]
+        dist_apart = CARD_SIZE[0] + 25
+        fit_cards = (space // dist_apart)
+        if len(self.cards) > fit_cards:
+            dist_apart = (space - 75) // len(self.cards)
+
+        for card in self.cards:
+            card.draw(canvas,[pos[0]+i*dist_apart,pos[1]])
+            i += 1
+            # if i == 5:
+            #     break
 
 # define deck class
 class Deck:
@@ -130,30 +142,34 @@ def deal():
     dealer_hand.add_card(deck.deal_card())
     print "Dealer has:",str(dealer_hand),"(",dealer_hand.get_value(),")"
     print "Player has:",str(player_hand),"(",player_hand.get_value(),")"
+    outcome = "ABC"
     in_play = True
 
 def hit():
-    global score
+    global score,outcome
 
     # if the hand is in play, hit the player
-    if player_hand.get_value() <= 21:
+    if player_hand.get_value() <= 121:
         player_hand.add_card(deck.deal_card())
         print "Player now has:",str(player_hand),"(",player_hand.get_value(),")"
 
     # if busted, assign a message to outcome, update in_play and score
-    if player_hand.get_value() > 21:
+    if player_hand.get_value() > 121:
         print "You have busted!"
+        outcome = "You has busted ("+str(player_hand.get_value())+")"
 
     if player_hand.get_value() == 21 and dealer_hand.get_value() == 21:
         print "Bad luck! Dealer wins tie at 21!!"
+        outcome = "Bad luck! Dealer wins tie at 21!!"
 
 def stand():
-    global score
+    global score, outcome
 
     # if hand is in play, repeatedly hit dealer until his hand has value 17 or more
 
-    if player_hand.get_value() > 21:
+    if player_hand.get_value() > 121:
         print "You busted, remember!"
+        outcome = "You busted, Buster!"
         return
 
     while dealer_hand.get_value() < 17:
@@ -162,24 +178,39 @@ def stand():
 
     if dealer_hand.get_value() > 21:
         print "Dealer has busted",dealer_hand.get_value()
+        outcome = "Dealer has busted ("+str(dealer_hand.get_value())+")"
+        return
 
     # assign a message to outcome, update in_play and score
     if dealer_hand.get_value() >= player_hand.get_value():
         print "Dealer wins!"
+        outcome="Dealer Wins!"
     else:
         print "Player wins!"
+        outcome="Player Wins!"
     print "Dealer :",dealer_hand.get_value()," vs Player :",player_hand.get_value()
+    outcome = "Dealer has busted (24)"
 
 # draw handler
 def draw(canvas):
+    global outcome
     # test to make sure that card.draw works, replace with your code below
 
-    card = Card("S", "A")
-    card.draw(canvas, [300, 300])
+    player_hand.draw(canvas,[50,400])
+    dealer_hand.draw(canvas,[50,200])
+    canvas.draw_text("Dealer:",[10,180],20,"White")
+    canvas.draw_text("Player:",[10,380],20,"White")
+    canvas.draw_text("BLACKJACK",[70,100],60,"Yellow")
 
+    x = 30 + (26 - len(outcome))*10
+    print x
+    x=250
+    canvas.draw_text(outcome,[x,585],40,"White")
+
+    canvas.draw_polygon([[30,520],[570,520],[570,590],[30,590]],5,"White")
 
 # initialization frame
-frame = simplegui.create_frame("Blackjack", 600, 600)
+frame = simplegui.create_frame("Blackjack", TABLE_WIDTH, TABLE_HEIGHT)
 frame.set_canvas_background("Green")
 
 #create buttons and canvas callback
