@@ -17,7 +17,7 @@ CARD_BACK_CENTER = (36, 48)
 card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")
 
 #Nicu images version
-# card_image = simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmS0tzZTRBZkNwcXc")
+# card_images = simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmS0tzZTRBZkNwcXc")
 # card_back=simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmWFV1UFFYRWswdDg")
 # CARD_BACK_SIZE = (88, 120)
 # CARD_BACK_CENTER = (44, 60)
@@ -120,6 +120,7 @@ def deal():
     global outcome, in_play, dealer_hand, player_hand, deck
 
     # your code goes here
+    print "Dealing..."
     deck.shuffle()
     player_hand = Hand()
     dealer_hand = Hand()
@@ -132,53 +133,42 @@ def deal():
     in_play = True
 
 def hit():
-    global in_play, player_hand, outcome
+    global score
 
     # if the hand is in play, hit the player
-    if not in_play:
-        return
-
-    player_hand.add_card(deck.deal_card())
+    if player_hand.get_value() <= 21:
+        player_hand.add_card(deck.deal_card())
+        print "Player now has:",str(player_hand),"(",player_hand.get_value(),")"
 
     # if busted, assign a message to outcome, update in_play and score
-    print "Hitting..."
-    print str(player_hand)," --> ",player_hand.get_value()
-
     if player_hand.get_value() > 21:
-        outcome="You have busted!"
-        print outcome
-        in_play = False
+        print "You have busted!"
+
+    if player_hand.get_value() == 21 and dealer_hand.get_value() == 21:
+        print "Bad luck! Dealer wins tie at 21!!"
 
 def stand():
-    global outcome, score, player_hand, dealer_hand, in_play
+    global score
 
     # if hand is in play, repeatedly hit dealer until his hand has value 17 or more
-    if not in_play:
-        return
 
     if player_hand.get_value() > 21:
-        print "You busted, Buster!"
+        print "You busted, remember!"
         return
-    else:
-        while dealer_hand.get_value() < 17:
-            dealer_hand.add_card(deck.deal_card())
-            print "Dealer:",str(dealer_hand)
+
+    while dealer_hand.get_value() < 17:
+        dealer_hand.add_card(deck.deal_card())
+        print "Dealer now has:",str(dealer_hand),"(",dealer_hand.get_value(),")"
+
+    if dealer_hand.get_value() > 21:
+        print "Dealer has busted",dealer_hand.get_value()
 
     # assign a message to outcome, update in_play and score
-    if dealer_hand.get_value() > 21:
-        print "Dealer busted"
-        outcome = "Player Wins!"
-        score += 1
-        return
-
-    if dealer_hand.get_value() < player_hand.get_value():
-        outcome = "Player Wins!"
-        score += 1
+    if dealer_hand.get_value() >= player_hand.get_value():
+        print "Dealer wins!"
     else:
-        outcome = "Dealer Wins!"
-        score -= 1
-    print outcome
-    in_play = False
+        print "Player wins!"
+    print "Dealer :",dealer_hand.get_value()," vs Player :",player_hand.get_value()
 
 # draw handler
 def draw(canvas):
