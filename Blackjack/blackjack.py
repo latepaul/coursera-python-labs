@@ -23,10 +23,15 @@ CARD_BACK_SIZE = (88, 120)
 CARD_BACK_CENTER = (44, 60)
 TABLE_WIDTH = 600
 TABLE_HEIGHT = 600
-
+old_x=-99
 # initialize some useful global variables
 in_play = False
-outcome = ""
+
+SHORT_MESSAGE_TIME = 5000
+NEW_DEAL_MESSAGE = "Press Deal for new game"
+HIT_STAND_MESSAGE = "Hit or Stand?"
+
+display_message = HIT_STAND_MESSAGE
 score = 0
 
 # define globals for cards
@@ -102,8 +107,7 @@ class Hand:
         for card in self.cards:
             card.draw(canvas,[pos[0]+i*dist_apart,pos[1]])
             i += 1
-            # if i == 5:
-            #     break
+
 
 # define deck class
 class Deck:
@@ -129,10 +133,12 @@ class Deck:
 
 #define event handlers for buttons
 def deal():
-    global outcome, in_play, dealer_hand, player_hand, deck
+    global in_play, dealer_hand, player_hand, deck, score, display_message
+
 
     # your code goes here
     print "Dealing..."
+    deck = Deck()
     deck.shuffle()
     player_hand = Hand()
     dealer_hand = Hand()
@@ -142,34 +148,47 @@ def deal():
     dealer_hand.add_card(deck.deal_card())
     print "Dealer has:",str(dealer_hand),"(",dealer_hand.get_value(),")"
     print "Player has:",str(player_hand),"(",player_hand.get_value(),")"
-    outcome = "ABC"
+    display_message = HIT_STAND_MESSAGE
+    if in_play:
+        short_message("Discarding game, you lose!")
+        score -= 1
     in_play = True
 
 def hit():
-    global score,outcome
+    global score, in_play
 
     # if the hand is in play, hit the player
-    if player_hand.get_value() <= 121:
+    if not in_play:
+        return
+
+    if player_hand.get_value() <= 21:
         player_hand.add_card(deck.deal_card())
         print "Player now has:",str(player_hand),"(",player_hand.get_value(),")"
 
-    # if busted, assign a message to outcome, update in_play and score
-    if player_hand.get_value() > 121:
-        print "You have busted!"
-        outcome = "You has busted ("+str(player_hand.get_value())+")"
+    # if busted, assign a message to display, update in_play and score
+    if player_hand.get_value() > 21:
+        print "You busted (",player_hand.get_value(),")"
+        short_message( "You have busted!")
+        in_play = False
+        score -= 1
 
     if player_hand.get_value() == 21 and dealer_hand.get_value() == 21:
         print "Bad luck! Dealer wins tie at 21!!"
-        outcome = "Bad luck! Dealer wins tie at 21!!"
+        short_message("Bad luck! Dealer wins tie at 21!!")
+        in_play = False
+        score -= 1
 
 def stand():
-    global score, outcome
+    global score, in_play
 
     # if hand is in play, repeatedly hit dealer until his hand has value 17 or more
+    if not in_play:
+        return
 
-    if player_hand.get_value() > 121:
+    if player_hand.get_value() > 21:
         print "You busted, remember!"
-        outcome = "You busted, Buster!"
+        short_message("You're busted")
+        in_play=False
         return
 
     while dealer_hand.get_value() < 17:
@@ -178,22 +197,45 @@ def stand():
 
     if dealer_hand.get_value() > 21:
         print "Dealer has busted",dealer_hand.get_value()
-        outcome = "Dealer has busted ("+str(dealer_hand.get_value())+")"
+        short_message("Dealer has busted")
+        in_play = False
+        score += 1
         return
 
-    # assign a message to outcome, update in_play and score
+    # assign a message to display, update in_play and score
     if dealer_hand.get_value() >= player_hand.get_value():
         print "Dealer wins!"
-        outcome="Dealer Wins!"
+        short_message("Dealer Wins!")
+        score -= 1
     else:
         print "Player wins!"
-        outcome="Player Wins!"
+        short_message("You Won!")
+        score += 1
     print "Dealer :",dealer_hand.get_value()," vs Player :",player_hand.get_value()
-    outcome = "Dealer has busted (24)"
+    in_play = False
 
+def short_term_msg_timer():
+    global display_message
+    
+    # revert to long term message
+    if in_play:
+        display_message = HIT_STAND_MESSAGE
+    else:
+        display_message = NEW_DEAL_MESSAGE
+        
+    short_term_timer.stop()
+    print "Back to long term message:", display_message
+    
+def short_message(message_text):
+    global display_message
+
+    print "Short message, setting to:",message_text
+    display_message = message_text
+    short_term_timer.start()
+    
 # draw handler
 def draw(canvas):
-    global outcome
+    global display_message,old_x
     # test to make sure that card.draw works, replace with your code below
 
     player_hand.draw(canvas,[50,400])
@@ -201,11 +243,20 @@ def draw(canvas):
     canvas.draw_text("Dealer:",[10,180],20,"White")
     canvas.draw_text("Player:",[10,380],20,"White")
     canvas.draw_text("BLACKJACK",[70,100],60,"Yellow")
+    canvas.draw_text("Score:",[470,150],18,"White")
+    if score < 0:
+        canvas.draw_text(str(score),[550,150],18,"Red")
+    else:
+        canvas.draw_text(str(score),[550,150],18,"Blue")
 
-    x = 30 + (26 - len(outcome))*10
-    print x
-    x=250
-    canvas.draw_text(outcome,[x,585],40,"White")
+    if in_play:
+        canvas.draw_image(card_back, CARD_BACK_CENTER, CARD_BACK_SIZE, [50 + CARD_CENTER[0], 200 + CARD_CENTER[1]], CARD_SIZE)
+
+    x = 30 + (22 - len(display_message))*10.5
+    if old_x != x:
+        print "char count=",len(display_message),"x=",x
+    old_x=x
+    canvas.draw_text(display_message,[x,585],40,"White")
 
     canvas.draw_polygon([[30,520],[570,520],[570,590],[30,590]],5,"White")
 
@@ -217,7 +268,14 @@ frame.set_canvas_background("Green")
 frame.add_button("Deal", deal, 200)
 frame.add_button("Hit",  hit, 200)
 frame.add_button("Stand", stand, 200)
+frame.add_label("   ")
+
+#credit where credit's due!
+credit = frame.add_label("(card images by Nicu: http://nicubunu.ro/cards/)")
+
 frame.set_draw_handler(draw)
+
+short_term_timer = simplegui.create_timer(SHORT_MESSAGE_TIME, short_term_msg_timer)
 
 deck = Deck()
 # get things rolling
