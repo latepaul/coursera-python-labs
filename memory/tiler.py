@@ -135,7 +135,7 @@ def load_images():
 
 # frame with canvas for 4x4 cards
 frame = simplegui.create_frame("Tiler", BIG_IMAGE_SIZE[0],BIG_IMAGE_SIZE[1])
-frame.set_canvas_background("white")
+frame.set_canvas_background("Green")
 #credit where credit's due!
 credit = frame.add_label("(card images by Nicu: http://nicubunu.ro/cards/)")
 
