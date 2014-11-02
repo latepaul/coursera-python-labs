@@ -147,7 +147,6 @@ def hit():
     if player_hand.get_value() > 21:
         outcome="You have busted!"
         print outcome
-        in_play = False
 
 def stand():
     global outcome, score, player_hand, dealer_hand, in_play
@@ -158,9 +157,8 @@ def stand():
 
     if player_hand.get_value() > 21:
         print "You busted, Buster!"
-        return
-    else:
-        while dealer_hand.get_value() < 17:
+
+    while dealer_hand.get_value() < 17:
             dealer_hand.add_card(deck.deal_card())
             print "Dealer:",str(dealer_hand)
 
@@ -169,9 +167,7 @@ def stand():
         print "Dealer busted"
         outcome = "Player Wins!"
         score += 1
-        return
-
-    if dealer_hand.get_value() < player_hand.get_value():
+    elif dealer_hand.get_value() < player_hand.get_value():
         outcome = "Player Wins!"
         score += 1
     else:
