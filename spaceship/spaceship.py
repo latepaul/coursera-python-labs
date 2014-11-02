@@ -193,9 +193,9 @@ def draw(canvas):
     wtime = (time / 4) % WIDTH
     center = debris_info.get_center()
     size = debris_info.get_size()
-#    canvas.draw_image(nebula_image, nebula_info.get_center(), nebula_info.get_size(), [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])
-#    canvas.draw_image(debris_image, center, size, (wtime - WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
-#    canvas.draw_image(debris_image, center, size, (wtime + WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
+    canvas.draw_image(nebula_image, nebula_info.get_center(), nebula_info.get_size(), [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])
+    canvas.draw_image(debris_image, center, size, (wtime - WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
+    canvas.draw_image(debris_image, center, size, (wtime + WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
 
     # draw ship and sprites
     my_ship.draw(canvas)
@@ -207,6 +207,10 @@ def draw(canvas):
     a_rock.update()
     a_missile.update()
     
+    canvas.draw_text("Score",[WIDTH-80,40],26,"White")
+    canvas.draw_text(str(score),[WIDTH-60,70],26,"White")
+    canvas.draw_text("Lives",[40,40],26,"White")
+    canvas.draw_text(str(lives),[60,70],26,"White")
 
 # timer handler that spawns a rock
 def rock_spawner():
