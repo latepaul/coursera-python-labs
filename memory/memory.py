@@ -28,6 +28,12 @@ STATE_PLAYING = 1
 STATE_WON = 2
 program_state = STATE_PRELOAD
 
+# image load statuses
+NOTHING_LOADED=0
+BACK_LOADED=1
+IM_LOADED=2
+load_status=NOTHING_LOADED
+
 # Explanation of the process of loading images etc:
 #
 # So, like a lot of people I wanted some nice card images
@@ -63,7 +69,7 @@ program_state = STATE_PRELOAD
 #
 
 # initial "Please wait..." period (ms)
-PRELOAD_DELAY = 500
+PRELOAD_DELAY = 2500
 # time to show "you Won!" message (ms)
 WIN_PAUSE = 5000
 
@@ -216,19 +222,21 @@ def draw(canvas):
 
 # this timer is used to check whether the images have loaded
 def load_status_timer():
-    global loaded, im, back_im, wait_msg
+    global loaded, im, back_im, wait_msg, load_status
 
     # loaded counts how many images have width > 0 i.e. have successfully loaded
     loaded = 0
 
     # check back image
-    if back_im.get_width() > 0:
-        loaded += 1
+    if load_status > NOTHING_LOADED:
+        if back_im.get_width() > 0:
+            loaded += 1
 
     # check each card image
-    for i in range(len(im)):
-        if im[i].get_width() > 0:
-            loaded += 1
+    if load_status > BACK_LOADED:
+        for i in range(len(im)):
+            if im[i].get_width() > 0:
+                loaded += 1
 
     # if all images loaded then stop checking
     if loaded == NUM_IMAGES:
@@ -239,17 +247,29 @@ def preload_timer():
     initial_timer.stop()
     new_game()
 
+# a timer to load the images
+def image_timer():
+    global NUM_IMAGES
+
+    image_load_timer.stop()
+    load_images()
+    NUM_IMAGES += len(im)
+
 # convenience function to load the images
 def load_images():
-    global im, back_im
+    global im, back_im, load_status
+
+    load_status=NOTHING_LOADED
 
     # load images
     # back
     back_im=simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmWFV1UFFYRWswdDg")
+    load_status=BACK_LOADED
 
     #within each group the suits are in order (Diamonds, Hearts, Clubs, Spades)
     #aces
     im.append(simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmRzI4MnpCdC1GYlU"))
+    load_status=IM_LOADED
     im.append(simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmdGU4N1NKa1kyalk"))
     im.append(simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmbDJ5eG44TnJBQ0U"))
     im.append(simplegui.load_image("https://docs.google.com/uc?export=download&id=0B4HFB7ccwbPmWkotYVBHTEdILWs"))
@@ -345,13 +365,15 @@ credit = frame.add_label("(card images by Nicu: http://nicubunu.ro/cards/)")
 frame.set_mouseclick_handler(mouseclick)
 frame.set_draw_handler(draw)
 
-# load the images
-load_images()
-NUM_IMAGES += len(im)
+#start timer to load iamges
+image_load_timer = simplegui.create_timer(100,image_timer)
+image_load_timer.start()
 
 #start timer to check loading status of images
 check_loading_timer = simplegui.create_timer(100,load_status_timer)
 check_loading_timer.start()
+
+
 
 #start timer for initial game
 initial_timer = simplegui.create_timer(PRELOAD_DELAY,preload_timer)
